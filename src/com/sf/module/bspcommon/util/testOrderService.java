@@ -9,28 +9,24 @@ import com.sf.module.bspcommon.util.util.HttpUtil;
 /**
  * Created by xuchun on 15/11/25.
  */
-public class test {
-
-
+public class testOrderService {
     /**
      * 1.接口是使用webservice做的。所以使用Http方式post,需要加上webserivce的报文头，不能只请求那几个字段。最终要post的内容为目录下的 "测试报文" 文件。
      * 2.因为加密是使用aes 256位加密的。而默认jdk是不支持这么多位的。如果直接运行加密会报初始化失败。需要将压缩包内security.zip内的2个jar包放入项目项目的运行环境jre,或者jdk目录下lib下的security。将原来的替换掉。
      * 3.发送请求时Content-type 注意使用 text/xml
+     * 4.报文字段顺序不能错。不能错。
      */
     public static void main(String[] argv) {
-        String sf_aes256cbc_key = "L9y8WBZwWzIT5tZhm1vsdSwQq87xN+Dv";
-        String sf_sha512_secret_key = "4xWYXVT7nSBMqFJw6qITq3WD1rUEic33";
-        String sf_partner_id = "WCKJTEST";
-        String sf_partner_token = "WCKJTEST";
-        String orderTest = "orderTest000012";
+
+        String orderTest = "orderTest02322012";
         String reportStr = "<?xml version=\"1.0\" encoding=\"utf-8\"?> \n" +
                 "<Request>\n" +
                 "  <Header>\n" +
-                "    <PartnerID>" + sf_partner_id + "</PartnerID>\n" +
-                "    <PartnerToken>" + sf_partner_token + "</PartnerToken>\n" +
+                "    <PartnerID>" + Constant.sf_partner_id + "</PartnerID>\n" +
+                "    <PartnerToken>" + Constant.sf_partner_token + "</PartnerToken>\n" +
                 "    <VersionID>V1.1</VersionID>\n" +
                 "    <DocumentType/>\n" +
-                "    <SenderID>" + sf_partner_id + "</SenderID>\n" +
+                "    <SenderID>" + Constant.sf_partner_id + "</SenderID>\n" +
                 "    <ReceiverID>SFCP</ReceiverID>\n" +
                 "    <Timestamp>2015-11-23 21:17:12</Timestamp>\n" +
                 "    <RequestID>" + orderTest + "</RequestID>\n" +
@@ -100,20 +96,24 @@ public class test {
                 "      </Order>\n" +
                 "    </OrderList>\n" +
                 "  </Body>\n" +
-                "</Request>";
-        AES256CipherExternal aes256 = AES256CipherExternalFactory.getAES256CipherExternalObject(sf_aes256cbc_key);
-        HmacSha512Coder sha512 = HmacSha512CoderFactory.getAESCBCCoderObject(sf_sha512_secret_key);
+
+                "</Request>\n";
+        AES256CipherExternal aes256 = AES256CipherExternalFactory.getAES256CipherExternalObject(Constant.sf_aes256cbc_key);
+        HmacSha512Coder sha512 = HmacSha512CoderFactory.getAESCBCCoderObject(Constant.sf_sha512_secret_key);
         try {
             String MsgData = aes256.AES_Encode(reportStr);
             String DataDigest = sha512.generateHMAC(MsgData);
-            String PartnerID = sf_partner_id;
+            String PartnerID = Constant.sf_partner_id;
             String ServiceCode = "OrderService";
             String result = "";
 
             String data = "<?xml version=\"1.0\" encoding=\"utf-8\"?> <S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                     "<S:Body><ns2:sfexpressService xmlns:ns2=\"http://service.expressservice.integration.sf.com/\"><MsgData>" + MsgData + "</MsgData><DataDigest>" + DataDigest + "</DataDigest>" +
-                    "<PartnerID>" + PartnerID + "</PartnerID><ServiceCode>OrderService</ServiceCode></ns2:sfexpressService></S:Body></S:Envelope>";
-            result = HttpUtil.sendPostUrl("http://218.17.248.244:7778/isp/ws/sfexpressService", data, "utf-8");
+                    "<PartnerID>" + PartnerID + "</PartnerID><ServiceCode>"+ServiceCode+"</ServiceCode></ns2:sfexpressService></S:Body></S:Envelope>";
+
+            result =   HttpUtil.sendPostUrl("http://218.17.248.244:7778/isp/ws/sfexpressService", data, "utf-8");
+            System.out.println(reportStr);
+            System.out.println("-------------");
             System.out.println(data);
             System.out.println("-------------");
             System.out.println(result);
